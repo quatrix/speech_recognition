@@ -842,6 +842,30 @@ class Recognizer(AudioSource):
         if hypothesis is not None: return hypothesis.hypstr
         raise UnknownValueError()  # no transcriptions available
 
+
+
+    def recognize_voiceitt(self, audio_data, spellotape_uri=None):
+        assert isinstance(audio_data, AudioData), "``audio_data`` must be audio data"
+
+        wav_data = audio_data.get_wav_data(
+            convert_rate=16000,
+            convert_width=2  # audio samples must be 16-bit
+        )
+
+        request = Request(spellotape_uri, data=wav_data, headers={"Content-Type": "audio/wav"})
+
+        # obtain audio transcription results
+        try:
+            response = urlopen(request, timeout=self.operation_timeout)
+        except HTTPError as e:
+            raise RequestError("recognition request failed: {}".format(e.reason))
+        except URLError as e:
+            raise RequestError("recognition connection failed: {}".format(e.reason))
+
+        response = json.loads(response.read().decode("utf-8"))
+
+        return response["result"]
+
     def recognize_google(self, audio_data, key=None, language="en-US", show_all=False):
         """
         Performs speech recognition on ``audio_data`` (an ``AudioData`` instance), using the Google Speech Recognition API.
