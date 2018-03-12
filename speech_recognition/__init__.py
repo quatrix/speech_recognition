@@ -852,7 +852,7 @@ class Recognizer(AudioSource):
             convert_width=2  # audio samples must be 16-bit
         )
 
-        request = Request(spellotape_uri, data=wav_data, headers={"Content-Type": "audio/wav"})
+        request = Request(spellotape_uri.encode("utf-8"), data=wav_data, headers={"Content-Type": "audio/wav"})
 
         # obtain audio transcription results
         try:
@@ -862,8 +862,8 @@ class Recognizer(AudioSource):
         except URLError as e:
             raise RequestError("recognition connection failed: {}".format(e.reason))
 
-        response = json.loads(response.read().decode("utf-8"))
-
+        response = response.read().decode("utf-8")
+        response = json.loads(response)
         return response["result"]
 
     def recognize_google(self, audio_data, key=None, language="en-US", show_all=False):
